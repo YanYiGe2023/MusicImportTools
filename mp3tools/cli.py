@@ -62,7 +62,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--rename", action="store_true",
                    help="按 ID3 标签重命名：歌曲名 - 歌手（单独使用＝只改文件名）")
     p.add_argument("--settings", metavar="FILE", help="设置文件路径（默认脚本旁的 settings.json）")
-    p.add_argument("--translate", action="store_true", help="本次启用有道翻译（覆盖设置里的开关）")
+    p.add_argument("--translate", action="store_true", help="本次启用百度翻译（覆盖设置里的开关）")
     p.add_argument("-o", "--out", metavar="DIR", help="输出文件夹（默认：输入位置下的 output）")
     p.add_argument("--in-place", action="store_true", help="原地覆盖原文件（谨慎使用）")
     p.add_argument("--no-recursive", action="store_true", help="只处理文件夹第一层，不含子文件夹")
@@ -103,7 +103,7 @@ def _cli_emit() -> Callable[..., None]:
                         print("重命名  : 开启")
                         if kw.get("translate"):
                             target = TARGET_CHOICES.get(kw.get("target_lang", ""), kw.get("target_lang", ""))
-                            print(f"翻译    : 开启（有道 → {target}）")
+                            print(f"翻译    : 开启（百度 → {target}）")
                 print(f"文件数  : {n}")
                 print("=" * 60)
             elif event == "file_begin":

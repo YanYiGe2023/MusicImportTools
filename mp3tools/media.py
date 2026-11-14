@@ -11,6 +11,7 @@ import subprocess
 from pathlib import Path
 
 from .config import APP_DIR
+from .errors import ToolError
 
 IS_WIN = os.name == "nt"
 CREATE_NO_WINDOW = 0x08000000 if IS_WIN else 0

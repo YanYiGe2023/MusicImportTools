@@ -22,7 +22,7 @@ from .media import (
     resolve_tools,
 )
 from .naming import compute_name
-from .translate import TranslateError, build_translator
+from .translate import TranslateError, build_translator, Translator
 
 
 def collect_files(

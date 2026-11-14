@@ -8,14 +8,17 @@ from dataclasses import asdict, dataclass, fields
 from pathlib import Path
 
 APP_NAME = "MP3 批量处理工具"
-APP_VERSION = "1.2"
+APP_VERSION = "1.3"
 APP_DIR = Path(__file__).resolve().parent.parent
 
 SETTINGS_FILENAME = "settings.json"
 SETTINGS_ENV = "MP3TOOL_SETTINGS"
 CACHE_FILENAME = "translate_cache.json"
 
-TARGET_CHOICES = {"zh-CHS": "简体中文", "en": "English"}
+# 百度翻译开放平台「通用翻译 API」
+TRANSLATE_ENDPOINT = "https://fanyi-api.baidu.com/api/trans/vip/translate"
+TRANSLATE_APPLY_URL = "https://fanyi-api.baidu.com/"
+TARGET_CHOICES = {"zh": "简体中文", "en": "English"}
 FIELDS_CHOICES = {"title": "仅歌曲名", "artist": "仅歌手", "both": "歌曲名和歌手"}
 FAIL_CHOICES = {"keep": "保留原文继续", "skip": "跳过该文件"}
 NAME_FORMATS = {
@@ -30,12 +33,12 @@ ILLEGAL_CHOICES = {"space": "替换为空格", "underscore": "替换为下划线
 class Settings:
     """用户设置。默认值即「不翻译、歌名 - 歌手、空格替换」。"""
 
-    # 翻译（有道智云 v3）
+    # 翻译（百度翻译开放平台）
     translate_enabled: bool = False
     app_key: str = ""
     app_secret: str = ""
-    endpoint: str = "https://openapi.youdao.com/api"
-    target_lang: str = "zh-CHS"
+    endpoint: str = TRANSLATE_ENDPOINT
+    target_lang: str = "zh"
     translate_fields: str = "title"
     accent_as_english: bool = True
     on_translate_fail: str = "keep"
@@ -72,9 +75,14 @@ class Settings:
             except (TypeError, ValueError):
                 continue
             setattr(result, f.name, value)
+        # 兼容旧版（有道）设置文件：语言代码与接口地址迁移到百度
+        legacy_langs = {"zh-CHS": "zh", "zh-CHT": "zh"}
+        result.target_lang = legacy_langs.get(result.target_lang, result.target_lang)
+        if "youdao.com" in result.endpoint:
+            result.endpoint = TRANSLATE_ENDPOINT
         # 兜底非法值
         if result.target_lang not in TARGET_CHOICES:
-            result.target_lang = "zh-CHS"
+            result.target_lang = "zh"
         if result.translate_fields not in FIELDS_CHOICES:
             result.translate_fields = "title"
         if result.on_translate_fail not in FAIL_CHOICES:

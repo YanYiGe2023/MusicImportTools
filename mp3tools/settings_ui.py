@@ -12,6 +12,8 @@ from .config import (
     ILLEGAL_CHOICES,
     NAME_FORMATS,
     TARGET_CHOICES,
+    TRANSLATE_APPLY_URL,
+    TRANSLATE_ENDPOINT,
     Settings,
     save_settings,
 )
@@ -29,7 +31,7 @@ def _choice_key(mapping: dict[str, str], label: str, default: str) -> str:
     return default
 
 class SettingsDialog(tk.Toplevel):
-    """设置页：有道翻译、命名格式、字符识别与失败策略。"""
+    """设置页：百度翻译、命名格式、字符识别与失败策略。"""
 
     def __init__(self, master, settings: Settings, on_save: Callable[[Settings], None]) -> None:
         super().__init__(master)
@@ -74,12 +76,12 @@ class SettingsDialog(tk.Toplevel):
         ttk.Button(buttons, text="保存", command=self._save, width=8).pack(side="right", padx=(0, 8))
 
     def _build_translate(self, parent: ttk.Frame, settings: Settings) -> None:
-        box = ttk.LabelFrame(parent, text=" 翻译（有道智云 v3） ", padding=10)
+        box = ttk.LabelFrame(parent, text=" 翻译（百度翻译开放平台） ", padding=10)
         box.pack(fill="x")
 
         ttk.Checkbutton(
             box,
-            text="启用翻译：歌曲名 / 歌手出现中、英以外字符时调用有道翻译",
+            text="启用翻译：歌曲名 / 歌手出现中、英以外字符时调用百度翻译",
             variable=self.enabled_var,
             command=self._refresh_translate_state,
         ).pack(anchor="w")
@@ -88,11 +90,11 @@ class SettingsDialog(tk.Toplevel):
         grid.pack(fill="x", pady=(8, 0))
         grid.columnconfigure(1, weight=1)
 
-        ttk.Label(grid, text="应用 ID").grid(row=0, column=0, sticky="w")
+        ttk.Label(grid, text="APP ID").grid(row=0, column=0, sticky="w")
         self.key_entry = ttk.Entry(grid, textvariable=self.key_var)
         self.key_entry.grid(row=0, column=1, columnspan=3, sticky="ew", padx=(8, 0))
 
-        ttk.Label(grid, text="应用密钥").grid(row=1, column=0, sticky="w", pady=(6, 0))
+        ttk.Label(grid, text="密钥").grid(row=1, column=0, sticky="w", pady=(6, 0))
         self.secret_entry = ttk.Entry(grid, textvariable=self.secret_var, show="●")
         self.secret_entry.grid(row=1, column=1, columnspan=2, sticky="ew", padx=(8, 0), pady=(6, 0))
         ttk.Checkbutton(
@@ -128,7 +130,8 @@ class SettingsDialog(tk.Toplevel):
 
         ttk.Label(
             box,
-            text="申请地址：https://ai.youdao.com/ （需开通「文本翻译」服务）。"
+            text=f"申请地址：{TRANSLATE_APPLY_URL} （注册后开通「通用文本翻译」，"
+                 "在管理控制台查看 APP ID 与密钥）。"
                  "密钥以明文保存在 settings.json，请勿分享该文件。",
             foreground="#666666", wraplength=620,
         ).pack(anchor="w", pady=(8, 0))
@@ -219,10 +222,10 @@ class SettingsDialog(tk.Toplevel):
         key = self.key_var.get().strip()
         secret = self.secret_var.get().strip()
         if strict and enabled and not key:
-            raise ToolError("启用翻译前，请填写有道的应用 ID。")
+            raise ToolError("启用翻译前，请填写百度翻译的 APP ID。")
         if strict and enabled and not secret:
-            raise ToolError("启用翻译前，请填写有道的应用密钥。")
-        endpoint = self.endpoint_var.get().strip() or "https://openapi.youdao.com/api"
+            raise ToolError("启用翻译前，请填写百度翻译的密钥。")
+        endpoint = self.endpoint_var.get().strip() or TRANSLATE_ENDPOINT
         if not endpoint.startswith(("http://", "https://")):
             raise ToolError("接口地址必须以 http:// 或 https:// 开头。")
         try:
@@ -238,7 +241,7 @@ class SettingsDialog(tk.Toplevel):
             app_key=key,
             app_secret=secret,
             endpoint=endpoint,
-            target_lang=_choice_key(TARGET_CHOICES, self.target_var.get(), "zh-CHS"),
+            target_lang=_choice_key(TARGET_CHOICES, self.target_var.get(), "zh"),
             translate_fields=_choice_key(FIELDS_CHOICES, self.fields_var.get(), "title"),
             accent_as_english=self.accent_var.get(),
             on_translate_fail=_choice_key(FAIL_CHOICES, self.fail_var.get(), "keep"),
@@ -270,10 +273,10 @@ class SettingsDialog(tk.Toplevel):
             self.status_var.set(str(exc))
             return
         if not settings.app_key or not settings.app_secret:
-            self.status_var.set("请先填写应用 ID 和应用密钥")
+            self.status_var.set("请先填写 APP ID 和密钥")
             return
         settings.translate_enabled = True
-        sample = "こんにちは" if settings.target_lang == "zh-CHS" else "你好"
+        sample = "こんにちは" if settings.target_lang == "zh" else "你好"
         self.test_btn.configure(state="disabled")
         self.status_var.set("正在测试…")
         threading.Thread(

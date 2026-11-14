@@ -272,7 +272,7 @@ class VolumeToolApp(tk.Tk):
         self.translate_cache = cache_path_for(self.settings_file)
         self._log("设置已保存。")
         if settings.translate_enabled:
-            self._log(f"翻译：开启（有道 → {TARGET_CHOICES.get(settings.target_lang, settings.target_lang)}）")
+            self._log(f"翻译：开启（百度 → {TARGET_CHOICES.get(settings.target_lang, settings.target_lang)}）")
 
     # ---------- 运行 ----------
     def _build_config(self) -> JobConfig:
@@ -372,7 +372,7 @@ class VolumeToolApp(tk.Tk):
                     self._log("重命名：开启")
                     if kw.get("translate"):
                         target = TARGET_CHOICES.get(kw.get("target_lang", ""), kw.get("target_lang", ""))
-                        self._log(f"翻译：开启（有道 → {target}）")
+                        self._log(f"翻译：开启（百度 → {target}）")
         elif event == "translated":
             label = "歌曲名" if kw["field"] == "title" else "歌手"
             self._log(f"翻译{label}：{kw['source']} → {kw['text']}")
